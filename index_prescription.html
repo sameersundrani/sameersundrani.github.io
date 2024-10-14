@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload for Medication Extraction</title>
+    <style>
+        #drop_zone {
+            border: 2px dashed #ccc;
+            width: 300px;
+            height: 200px;
+            text-align: center;
+            line-height: 200px;
+            color: #ccc;
+        }
+        #drop_zone.dragover {
+            border-color: #000;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Drag and Drop Image to Extract Medication and Dosage</h2>
+
+<div id="drop_zone">Drop an image here</div>
+<br>
+<input type="file" id="file_input">
+<br><br>
+<button id="upload_button" disabled>Upload Image</button>
+
+<p id="result"></p>
+
+<script>
+    const dropZone = document.getElementById('drop_zone');
+    const fileInput = document.getElementById('file_input');
+    const uploadButton = document.getElementById('upload_button');
+    let selectedFile;
+
+    dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('dragover');
+        selectedFile = event.dataTransfer.files[0];
+        dropZone.innerText = selectedFile.name;
+        uploadButton.disabled = false;
+    });
+
+    fileInput.addEventListener('change', (event) => {
+        selectedFile = event.target.files[0];
+        dropZone.innerText = selectedFile.name;
+        uploadButton.disabled = false;
+    });
+
+    uploadButton.addEventListener('click', () => {
+        if (selectedFile) {
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+
+            fetch('https://your-heroku-app-url.com/upload_prescription', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = `Medication and Dosage: ${data.medication_and_dosage}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = 'Error extracting medication and dosage.';
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
