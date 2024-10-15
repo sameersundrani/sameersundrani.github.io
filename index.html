@@ -31,6 +31,12 @@
             margin-bottom: 20px;
         }
 
+        /* Logo styling */
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+
         #drop_zone {
             border: 2px dashed #007bff;
             border-radius: 8px;
@@ -91,6 +97,9 @@
 <body>
 
 <div class="container">
+    <!-- Logo image -->
+    <img src="https://cdn.vanderbilt.edu/vu-web/medschool-wpcontent/sites/66/2018/09/25044514/MIDP1100x400.png" alt="Logo" class="logo"> <!-- Replace with your logo URL -->
+    
     <h2>Extract Medication & Dosage</h2>
 
     <div id="drop_zone">Drop an image here or click to upload</div>
@@ -159,7 +168,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                result.innerHTML = `<strong>Medication and Dosage:</strong> ${data.medication_and_dosage}`;
+                result.innerHTML = `
+                    <strong>Medication:</strong> ${data.medication} <br>
+                    <strong>Dosage:</strong> ${data.dosage} <br>
+                    <strong>Instructions:</strong> ${data.instructions}
+                `;
             })
             .catch(error => {
                 console.error('Error:', error);
