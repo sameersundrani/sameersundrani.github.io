@@ -3,40 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload for Medication Extraction</title>
+    <title>Medication Extraction</title>
     <style>
-        #drop_zone {
-            border: 2px dashed #ccc;
-            width: 300px;
-            height: 200px;
-            text-align: center;
-            line-height: 200px;
-            color: #ccc;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #drop_zone {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 30px;
+            color: #aaa;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
         #drop_zone.dragover {
-            border-color: #000;
-            color: #000;
+            border-color: #0056b3;
+            color: #0056b3;
+        }
+
+        #drop_zone img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        #file_input {
+            display: none;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .error {
+            color: red;
         }
     </style>
 </head>
 <body>
 
-<h2>Drag and Drop Image to Extract Medication and Dosage</h2>
+<div class="container">
+    <h2>Extract Medication & Dosage</h2>
 
-<div id="drop_zone">Drop an image here</div>
-<br>
-<input type="file" id="file_input">
-<br><br>
-<button id="upload_button" disabled>Upload Image</button>
+    <div id="drop_zone">Drop an image here or click to upload</div>
+    <input type="file" id="file_input" accept="image/*">
+    <button id="upload_button" class="btn" disabled>Upload Image</button>
 
-<p id="result"></p>
+    <p id="result"></p>
+</div>
 
 <script>
     const dropZone = document.getElementById('drop_zone');
     const fileInput = document.getElementById('file_input');
     const uploadButton = document.getElementById('upload_button');
+    const result = document.getElementById('result');
     let selectedFile;
 
+    // Handle drag and drop
     dropZone.addEventListener('dragover', (event) => {
         event.preventDefault();
         dropZone.classList.add('dragover');
@@ -50,20 +121,37 @@
         event.preventDefault();
         dropZone.classList.remove('dragover');
         selectedFile = event.dataTransfer.files[0];
-        dropZone.innerText = selectedFile.name;
+        displayImage(selectedFile);
         uploadButton.disabled = false;
+    });
+
+    // Handle file input click
+    dropZone.addEventListener('click', () => {
+        fileInput.click();
     });
 
     fileInput.addEventListener('change', (event) => {
         selectedFile = event.target.files[0];
-        dropZone.innerText = selectedFile.name;
+        displayImage(selectedFile);
         uploadButton.disabled = false;
     });
 
+    // Display image preview
+    function displayImage(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            dropZone.innerHTML = `<img src="${e.target.result}" alt="Uploaded Image">`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Handle upload button click
     uploadButton.addEventListener('click', () => {
         if (selectedFile) {
             const formData = new FormData();
             formData.append('image', selectedFile);
+
+            result.innerText = 'Processing...';
 
             fetch('https://f0b9-34-85-161-112.ngrok-free.app/upload_prescription', {
                 method: 'POST',
@@ -71,11 +159,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerText = `Medication and Dosage: ${data.medication_and_dosage}`;
+                result.innerHTML = `<strong>Medication and Dosage:</strong> ${data.medication_and_dosage}`;
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('result').innerText = 'Error extracting medication and dosage (UPDATE).';
+                result.innerHTML = '<span class="error">Error extracting medication and dosage. Please try again.</span>';
             });
         }
     });
